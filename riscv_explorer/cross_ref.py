@@ -69,10 +69,20 @@ _RE_XREF = re.compile(
     r")(?:,.*?)?>>"
 )
 
-# Two-letter platform-prefix shorthands that appear as ext:sm[], ext:ss[], etc.
-# These are collective references ("all Sm* extensions"), not standalone extension names.
+# Two-letter platform-prefix shorthands.  They appear in two ways:
+#   - as ext:sm[] macros (collective "all Sm* extensions" references)
+#   - as chapter-group headers: == "Sm" Machine Extensions (one file per prefix)
+# In both cases they are category labels, not standalone extension names.
+# Applied as a post-processing filter across ALL regex patterns.
 _PLATFORM_PREFIX_SHORTHANDS: frozenset[str] = frozenset({
     "sm", "ss", "sv", "sh", "sd", "su",
+})
+
+# CSR register section anchors that look like S-prefixed extension names but aren't.
+# These come from [[sstatus]] and [[sstatusreg]] in src/priv/supervisor.adoc —
+# they mark the sstatus CSR description section, not an extension definition.
+_CSR_ANCHORS: frozenset[str] = frozenset({
+    "sstatus", "sstatusreg", "vsstatus",
 })
 
 # Common false positives in anchor/header context that are not extension names.
@@ -130,9 +140,11 @@ def scan_adoc_file(path: Path) -> set[str]:
     False positives are reduced by:
       - restricting the quoted-name pattern to header lines (starting with =)
       - filtering against a noise-word blocklist
-      - filtering out known platform-prefix shorthands (sm, ss, sv, sh, su)
-        that appear as collective references in the priv spec (e.g., ext:sm[])
-        rather than as actual standalone extension names
+      - post-processing removal of _PLATFORM_PREFIX_SHORTHANDS (sm, ss, sv, sh,
+        sd, su) which appear as ext:sm[] macros AND as chapter-group headers
+        like == "Sm" Machine Extensions — neither is a standalone extension name
+      - post-processing removal of _CSR_ANCHORS (sstatus, sstatusreg) which are
+        [[sstatus]] document anchors for the CSR register description, not exts
     """
     found: set[str] = set()
     try:
@@ -172,6 +184,12 @@ def scan_adoc_file(path: Path) -> set[str]:
                 if name not in _NOISE_WORDS and len(name) >= 1:
                     found.add(name.lower())
 
+    # Global post-processing: remove collective prefix shorthands and known CSR
+    # anchors regardless of which pattern added them.
+    # _PLATFORM_PREFIX_SHORTHANDS covers "Sm"/"Ss"/"Sv"/"Sh" chapter headers.
+    # _CSR_ANCHORS covers [[sstatus]] / [[sstatusreg]] in supervisor.adoc.
+    found -= _PLATFORM_PREFIX_SHORTHANDS
+    found -= _CSR_ANCHORS
     return found
 
 

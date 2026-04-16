@@ -34,18 +34,46 @@ console = Console()
 #
 # Four syntactic forms appear in the wild (verified against the actual repo):
 #
-#   1. ext:zba[]  or  extlink:zbb[]        — most common, new-style macro
-#   2. "Zba" or `Zbkb` in section headers  — title lines starting with =
-#   3. [[ext:zicsr]]                        — new-style anchor
-#   4. [[zbkb-sc,Zbkb]]                     — old-style anchor, readable form after comma
+#   1. ext:zba[]  or  extlink:zbb[]           — most common, new-style macro
+#   2. "Zba" or `Zbkb` in section headers     — title lines starting with =
+#   3. [[ext:zicsr]]                           — new-style anchor
+#   4. [[zbkb-sc,Zbkb]]                        — old-style anchor, readable form after comma
+#   5. <<#zba>>  or  <<zba>>                  — AsciiDoc cross-reference (very common
+#                                               for bitmanip: Zba, Zbc, Zbs all use this)
 #
 # Pattern 2 is intentionally restricted to header lines (starting with =) to
 # avoid false positives from normal prose like "The M extension..."
+#
+# Single-letter extensions (I, M, A, F, D, Q, C, H, V) use ext:i[] which requires
+# the regex to accept zero additional chars: [a-z][a-z0-9]{0,20} not {1,20}.
+#
+# Platform-prefix shorthands (ext:sm[], ext:sh[]) appear in the priv spec as
+# collective references and are filtered out — they're not standalone extension names.
 
-_RE_EXT_MACRO = re.compile(r"\bext(?:link)?:([a-z][a-z0-9]{1,20})\b")
+_RE_EXT_MACRO = re.compile(r"\bext(?:link)?:([a-z][a-z0-9]{0,20})\b")
 _RE_HEADER_QUOTED = re.compile(r'(?:"|`)([A-Z][a-zA-Z0-9]{0,20})(?:"|`)')
 _RE_ANCHOR_EXT = re.compile(r"\[\[ext:([a-z][a-z0-9]{0,20})\]\]")
 _RE_ANCHOR_COMMA = re.compile(r"\[\[[^\]]+,([A-Z][a-zA-Z0-9]{0,20})\]\]")
+# AsciiDoc cross-references: <<#zba>>, <<zba>>, <<zba,some label>>
+# Pattern is intentionally restrictive — only extension-shaped anchors:
+#   Z-prefixed (zba, zbb, zicsr, ...)  /  X-prefixed experimental  /
+#   single-letter base ISA (i, m, a, f, d, q, c, h, v, e) alone (no suffix) /
+#   S-prefixed platform exts with a 2-letter prefix + at least 3 more chars,
+#   so that CSR names like "satp", "scause", "sstatus" don't match.
+_RE_XREF = re.compile(
+    r"<<#?("
+    r"z[a-z][a-z0-9]{0,18}"                    # Z-prefixed standard extensions
+    r"|x[a-z][a-z0-9]{0,18}"                   # X-prefixed experimental
+    r"|[acdefghimqv](?=[,>])"                  # Single-letter base ISA only if followed by , or >
+    r"|(?:sm|ss|sv|sh|sd)[a-z][a-z0-9]{1,17}" # S-prefixed platform (smepmp, svinval, ...)
+    r")(?:,.*?)?>>"
+)
+
+# Two-letter platform-prefix shorthands that appear as ext:sm[], ext:ss[], etc.
+# These are collective references ("all Sm* extensions"), not standalone extension names.
+_PLATFORM_PREFIX_SHORTHANDS: frozenset[str] = frozenset({
+    "sm", "ss", "sv", "sh", "sd", "su",
+})
 
 # Common false positives in anchor/header context that are not extension names.
 _NOISE_WORDS: frozenset[str] = frozenset({
@@ -100,8 +128,11 @@ def scan_adoc_file(path: Path) -> set[str]:
 
     Returns a set of lowercase names (e.g., {"zba", "zbb", "m", "zicsr"}).
     False positives are reduced by:
-      - restricting the quoted-name pattern to header lines (lines starting =)
-      - filtering against a small noise-word blocklist
+      - restricting the quoted-name pattern to header lines (starting with =)
+      - filtering against a noise-word blocklist
+      - filtering out known platform-prefix shorthands (sm, ss, sv, sh, su)
+        that appear as collective references in the priv spec (e.g., ext:sm[])
+        rather than as actual standalone extension names
     """
     found: set[str] = set()
     try:
@@ -110,21 +141,31 @@ def scan_adoc_file(path: Path) -> set[str]:
         return found
 
     for line in text.splitlines():
-        # Pattern 1: ext:name[] anywhere on the line
+        # Pattern 1: ext:name[] or extlink:name[] anywhere on the line.
+        # {0,20} (not {1,20}) so single-letter base extensions like ext:i[],
+        # ext:m[], ext:a[] are captured.
         for m in _RE_EXT_MACRO.finditer(line):
-            found.add(m.group(1).lower())
+            name = m.group(1).lower()
+            if name not in _PLATFORM_PREFIX_SHORTHANDS:
+                found.add(name)
 
         # Pattern 3: [[ext:name]] anchors anywhere
         for m in _RE_ANCHOR_EXT.finditer(line):
             found.add(m.group(1).lower())
 
-        # Pattern 4: [[something,Name]] anchors — readable form after comma
+        # Pattern 4: [[something,Name]] anchors — the readable name after comma
         for m in _RE_ANCHOR_COMMA.finditer(line):
             name = m.group(1)
             if name not in _NOISE_WORDS:
                 found.add(name.lower())
 
-        # Pattern 2: "Name" or `Name` but ONLY in header lines (=== ... )
+        # Pattern 5: <<#zba>> or <<zba>> AsciiDoc cross-references.
+        # This is the primary way Zba, Zbc, Zbs are referenced in b-st-ext.adoc.
+        for m in _RE_XREF.finditer(line):
+            found.add(m.group(1).lower())
+
+        # Pattern 2: "Name" or `Name` but ONLY in header lines (lines with =).
+        # Restricted to headers to avoid capturing random capitalized words in prose.
         if line.lstrip().startswith("="):
             for m in _RE_HEADER_QUOTED.finditer(line):
                 name = m.group(1)

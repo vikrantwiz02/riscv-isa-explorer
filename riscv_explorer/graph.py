@@ -17,17 +17,12 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from itertools import combinations
 from pathlib import Path
-from typing import TYPE_CHECKING
-
 from rich.console import Console
 from rich.table import Table
 from rich import box
 
 from .normalize import normalize_tags
 from .parser import InstrEntry
-
-if TYPE_CHECKING:
-    pass
 
 console = Console()
 

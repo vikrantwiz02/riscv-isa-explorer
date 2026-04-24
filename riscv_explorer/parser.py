@@ -49,6 +49,7 @@ class SummaryData:
     multi_ext: list[MultiExtInstr] = field(default_factory=list)
     total_instructions: int = 0
     total_canonical_extensions: int = 0
+    total_raw_tags: int = 0
 
 
 def fetch_instr_dict(
@@ -127,11 +128,15 @@ def find_multi_extension_instructions(
 def build_summary(instr_dict: dict[str, InstrEntry]) -> SummaryData:
     groups = group_by_canonical_extension(instr_dict)
     multi_ext = find_multi_extension_instructions(instr_dict)
+    raw_tags: set[str] = set()
+    for entry in instr_dict.values():
+        raw_tags.update(entry.get("extension", []))
     return SummaryData(
         groups=groups,
         multi_ext=multi_ext,
         total_instructions=len(instr_dict),
         total_canonical_extensions=len(groups),
+        total_raw_tags=len(raw_tags),
     )
 
 
@@ -156,7 +161,7 @@ def print_summary_table(summary: SummaryData) -> None:
     console.print(table)
     console.print(
         f"  [dim]{summary.total_canonical_extensions} canonical extensions "
-        f"(from 114 raw tags after normalization)[/dim]\n"
+        f"(from {summary.total_raw_tags} raw tags after normalization)[/dim]\n"
     )
 
 

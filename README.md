@@ -137,11 +137,14 @@ Extension Relationship Graph
 ## Running Tests
 
 ```bash
+pip install -r requirements-dev.txt
 pytest tests/ -v
 ```
 
 71 tests covering normalization edge cases, grouping logic, and the adoc scanner.
 No network access needed — all tests run against local fixtures and temporary files.
+
+CI runs automatically on every push via GitHub Actions (`.github/workflows/test.yml`).
 
 ---
 

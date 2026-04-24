@@ -1,0 +1,303 @@
+─────────────────────── Tier 1 — Instruction Set Parsing ───────────────────────
+                Extension Summary                 
+╔══════════════╤══════════════╤══════════════════╗
+║ Extension    │ Instructions │ Example Mnemonic ║
+╟──────────────┼──────────────┼──────────────────╢
+║ A            │           22 │ AMOADD_D         ║
+║ C            │           42 │ C_ADD            ║
+║ D            │           48 │ C_FLD            ║
+║ F            │           41 │ C_FLW            ║
+║ H            │           18 │ HFENCE_GVMA      ║
+║ I            │           52 │ ADD              ║
+║ M            │           13 │ DIV              ║
+║ Q            │           45 │ FADD_Q           ║
+║ S            │            2 │ SFENCE_VMA       ║
+║ Sdext        │            1 │ DRET             ║
+║ Smrnmi       │            1 │ MNRET            ║
+║ Ssctr        │            1 │ SCTRCLR          ║
+║ Svinval      │            5 │ HINVAL_GVMA      ║
+║ System       │            2 │ MRET             ║
+║ U            │            1 │ URET             ║
+║ V            │          627 │ VAADD_VV         ║
+║ Zabha        │           20 │ AMOADD_B         ║
+║ Zacas        │            5 │ AMOCAS_B         ║
+║ Zalasr       │            8 │ LB_AQ            ║
+║ Zawrs        │            2 │ WRS_NTO          ║
+║ Zba          │            8 │ ADD_UW           ║
+║ Zbb          │           26 │ ANDN             ║
+║ Zbc          │            3 │ CLMUL            ║
+║ Zbkb         │           12 │ ANDN             ║
+║ Zbkc         │            2 │ CLMUL            ║
+║ Zbkx         │            2 │ XPERM4           ║
+║ Zbp          │            6 │ GORCI            ║
+║ Zbs          │            8 │ BCLR             ║
+║ Zcb          │           12 │ C_LBU            ║
+║ Zcmop        │            1 │ C_MOP_N          ║
+║ Zcmp         │            6 │ CM_MVA01S        ║
+║ Zcmt         │            1 │ CM_JALT          ║
+║ Zfa          │           33 │ FCVTMOD_W_D      ║
+║ Zfbfmin      │            2 │ FCVT_BF16_S      ║
+║ Zfh          │           33 │ FADD_H           ║
+║ Zfhmin       │           10 │ FCVT_D_H         ║
+║ Zibi         │            2 │ BEQI             ║
+║ Zicbo        │            4 │ CBO_CLEAN        ║
+║ Zicfiss      │            2 │ SSAMOSWAP_D      ║
+║ Zicond       │            2 │ CZERO_EQZ        ║
+║ Zicsr        │            6 │ CSRRC            ║
+║ Zifencei     │            1 │ FENCE_I          ║
+║ Zimop        │            2 │ MOP_R_N          ║
+║ Zk           │           41 │ AES32DSI         ║
+║ Zkn          │           41 │ AES32DSI         ║
+║ Zknd         │            7 │ AES32DSI         ║
+║ Zkne         │            6 │ AES32ESI         ║
+║ Zknh         │           14 │ SHA256SIG0       ║
+║ Zkr          │            2 │ CSRRAND          ║
+║ Zks          │           20 │ ANDN             ║
+║ Zksed        │            2 │ SM4ED            ║
+║ Zksh         │            2 │ SM3P0            ║
+║ Zvabd        │            5 │ VABD_VV          ║
+║ Zvbb         │           16 │ VANDN_VV         ║
+║ Zvbc         │            4 │ VCLMUL_VV        ║
+║ Zvfbdot32f   │            1 │ VFBDOT_VV        ║
+║ Zvfbfmin     │            2 │ VFNCVTBF16_F_F_W ║
+║ Zvfbfwma     │            2 │ VFWMACCBF16_VF   ║
+║ Zvfofp4min   │            1 │ VFEXT_VF2        ║
+║ Zvfofp8min   │            3 │ VFNCVT_F_F_Q     ║
+║ Zvfqbdot8f   │            2 │ VFQBDOT_ALT_VV   ║
+║ Zvfqldot8f   │            2 │ VFQLDOT_ALT_VV   ║
+║ Zvfwbdot16bf │            1 │ VFWBDOT_VV       ║
+║ Zvfwldot16bf │            1 │ VFWLDOT_VV       ║
+║ Zvkg         │            2 │ VGHSH_VV         ║
+║ Zvkn         │           23 │ VAESDF_VS        ║
+║ Zvkned       │           11 │ VAESDF_VS        ║
+║ Zvknha       │            3 │ VSHA2CH_VV       ║
+║ Zvknhb       │            3 │ VSHA2CH_VV       ║
+║ Zvks         │           14 │ VANDN_VV         ║
+║ Zvksed       │            3 │ VSM4K_VI         ║
+║ Zvksh        │            2 │ VSM3C_VI         ║
+║ Zvqbdot8i    │            2 │ VQBDOTS_VV       ║
+║ Zvqdotq      │            7 │ VQDOT_VV         ║
+║ Zvqldot8i    │            2 │ VQLDOTS_VV       ║
+║ Zvzip        │            5 │ VPAIRE_VV        ║
+╟──────────────┼──────────────┼──────────────────╢
+║ TOTAL        │         1188 │                  ║
+╚══════════════╧══════════════╧══════════════════╝
+  76 canonical extensions (from 114 raw tags after normalization)
+
+Instructions in Multiple Extensions (122 
+                 total)                  
+                                         
+  Mnemonic      Canonical Extensions     
+ ─────────────────────────────────────── 
+  AES32DSI      Zk, Zkn, Zknd            
+  AES32DSMI     Zk, Zkn, Zknd            
+  AES32ESI      Zk, Zkn, Zkne            
+  AES32ESMI     Zk, Zkn, Zkne            
+  AES64DS       Zk, Zkn, Zknd            
+  AES64DSM      Zk, Zkn, Zknd            
+  AES64ES       Zk, Zkn, Zkne            
+  AES64ESM      Zk, Zkn, Zkne            
+  AES64IM       Zk, Zkn, Zknd            
+  AES64KS1I     Zk, Zkn, Zknd, Zkne      
+  AES64KS2      Zk, Zkn, Zknd, Zkne      
+  AMOCAS_B      Zabha, Zacas             
+  AMOCAS_H      Zabha, Zacas             
+  ANDN          Zbb, Zbkb, Zk, Zkn, Zks  
+  C_FLD         C, D                     
+  C_FLDSP       C, D                     
+  C_FLW         C, F                     
+  C_FLWSP       C, F                     
+  C_FSD         C, D                     
+  C_FSDSP       C, D                     
+  C_FSW         C, F                     
+  C_FSWSP       C, F                     
+  CLMUL         Zbc, Zbkc, Zk, Zkn, Zks  
+  CLMULH        Zbc, Zbkc, Zk, Zkn, Zks  
+  FCVT_D_H      D, Zfhmin                
+  FCVT_H_D      D, Zfhmin                
+  FCVT_H_Q      Q, Zfhmin                
+  FCVT_Q_H      Q, Zfhmin                
+  FCVTMOD_W_D   D, Zfa                   
+  FLEQ_D        D, Zfa                   
+  FLEQ_H        Zfa, Zfh                 
+  FLEQ_Q        Q, Zfa                   
+  FLEQ_S        F, Zfa                   
+  FLI_D         D, Zfa                   
+  FLI_H         Zfa, Zfh                 
+  FLI_Q         Q, Zfa                   
+  FLI_S         F, Zfa                   
+  FLTQ_D        D, Zfa                   
+  FLTQ_H        Zfa, Zfh                 
+  FLTQ_Q        Q, Zfa                   
+  FLTQ_S        F, Zfa                   
+  FMAXM_D       D, Zfa                   
+  FMAXM_H       Zfa, Zfh                 
+  FMAXM_Q       Q, Zfa                   
+  FMAXM_S       F, Zfa                   
+  FMINM_D       D, Zfa                   
+  FMINM_H       Zfa, Zfh                 
+  FMINM_Q       Q, Zfa                   
+  FMINM_S       F, Zfa                   
+  FMVH_X_D      D, Zfa                   
+  FMVH_X_Q      Q, Zfa                   
+  FMVP_D_X      D, Zfa                   
+  FMVP_Q_X      Q, Zfa                   
+  FROUND_D      D, Zfa                   
+  FROUND_H      Zfa, Zfh                 
+  FROUND_Q      Q, Zfa                   
+  FROUND_S      F, Zfa                   
+  FROUNDNX_D    D, Zfa                   
+  FROUNDNX_H    Zfa, Zfh                 
+  FROUNDNX_Q    Q, Zfa                   
+  FROUNDNX_S    F, Zfa                   
+  HINVAL_GVMA   H, Svinval               
+  HINVAL_VVMA   H, Svinval               
+  ORN           Zbb, Zbkb, Zk, Zkn, Zks  
+  PACK          Zbkb, Zk, Zkn, Zks       
+  PACKH         Zbkb, Zk, Zkn, Zks       
+  PACKW         Zbkb, Zk, Zkn, Zks       
+  ROL           Zbb, Zbkb, Zk, Zkn, Zks  
+  ROLW          Zbb, Zbkb, Zk, Zkn, Zks  
+  ROR           Zbb, Zbkb, Zk, Zkn, Zks  
+  RORI          Zbb, Zbkb, Zk, Zkn, Zks  
+  RORIW         Zbb, Zbkb, Zk, Zkn, Zks  
+  RORW          Zbb, Zbkb, Zk, Zkn, Zks  
+  SHA256SIG0    Zk, Zkn, Zknh            
+  SHA256SIG1    Zk, Zkn, Zknh            
+  SHA256SUM0    Zk, Zkn, Zknh            
+  SHA256SUM1    Zk, Zkn, Zknh            
+  SHA512SIG0    Zk, Zkn, Zknh            
+  SHA512SIG0H   Zk, Zkn, Zknh            
+  SHA512SIG0L   Zk, Zkn, Zknh            
+  SHA512SIG1    Zk, Zkn, Zknh            
+  SHA512SIG1H   Zk, Zkn, Zknh            
+  SHA512SIG1L   Zk, Zkn, Zknh            
+  SHA512SUM0    Zk, Zkn, Zknh            
+  SHA512SUM0R   Zk, Zkn, Zknh            
+  SHA512SUM1    Zk, Zkn, Zknh            
+  SHA512SUM1R   Zk, Zkn, Zknh            
+  SM3P0         Zks, Zksh                
+  SM3P1         Zks, Zksh                
+  SM4ED         Zks, Zksed               
+  SM4KS         Zks, Zksed               
+  VAESDF_VS     Zvkn, Zvkned             
+  VAESDF_VV     Zvkn, Zvkned             
+  VAESDM_VS     Zvkn, Zvkned             
+  VAESDM_VV     Zvkn, Zvkned             
+  VAESEF_VS     Zvkn, Zvkned             
+  VAESEF_VV     Zvkn, Zvkned             
+  VAESEM_VS     Zvkn, Zvkned             
+  VAESEM_VV     Zvkn, Zvkned             
+  VAESKF1_VI    Zvkn, Zvkned             
+  VAESKF2_VI    Zvkn, Zvkned             
+  VAESZ_VS      Zvkn, Zvkned             
+  VANDN_VV      Zvbb, Zvkn, Zvks         
+  VANDN_VX      Zvbb, Zvkn, Zvks         
+  VBREV8_V      Zvbb, Zvkn, Zvks         
+  VREV8_V       Zvbb, Zvkn, Zvks         
+  VROL_VV       Zvbb, Zvkn, Zvks         
+  VROL_VX       Zvbb, Zvkn, Zvks         
+  VROR_VI       Zvbb, Zvkn, Zvks         
+  VROR_VV       Zvbb, Zvkn, Zvks         
+  VROR_VX       Zvbb, Zvkn, Zvks         
+  VSHA2CH_VV    Zvkn, Zvknha, Zvknhb     
+  VSHA2CL_VV    Zvkn, Zvknha, Zvknhb     
+  VSHA2MS_VV    Zvkn, Zvknha, Zvknhb     
+  VSM3C_VI      Zvks, Zvksh              
+  VSM3ME_VV     Zvks, Zvksh              
+  VSM4K_VI      Zvks, Zvksed             
+  VSM4R_VS      Zvks, Zvksed             
+  VSM4R_VV      Zvks, Zvksed             
+  XNOR          Zbb, Zbkb, Zk, Zkn, Zks  
+  XPERM4        Zbkx, Zk, Zkn, Zks       
+  XPERM8        Zbkx, Zk, Zkn, Zks       
+                                         
+─────────────────── Tier 2 — Cross-Reference with ISA Manual ───────────────────
+ISA manual already cached at /Users/vikrant/.cache/riscv-explorer/isa-manual
+✓ Scanned 136 files, found references in 82
+                             Cross-Reference Report                             
+╔════════════════╤════════╤════════════════════════════════════════════════════╗
+║ Category       │  Count │ Extensions                                         ║
+╟────────────────┼────────┼────────────────────────────────────────────────────╢
+║ Matched        │     53 │ A, C, D, F, H, I, M, Q, Smrnmi, Svinval, V, Zabha, ║
+║                │        │ Zacas, Zalasr, Zawrs, Zba, Zbb, Zbc, Zbkb, Zbkc,   ║
+║                │        │ Zbkx, Zbs, Zcb, Zcmop, Zcmp, Zcmt, Zfa, Zfbfmin,   ║
+║                │        │ Zfh, Zfhmin, Zicond, Zicsr, Zifencei, Zimop, Zk,   ║
+║                │        │ Zkn, Zknd, Zkne, Zknh, Zkr, Zks, Zksed, Zksh,      ║
+║                │        │ Zvbb, Zvbc, Zvfbfmin, Zvfbfwma, Zvkg, Zvkn,        ║
+║                │        │ Zvkned, Zvks, Zvksed, Zvksh                        ║
+╟────────────────┼────────┼────────────────────────────────────────────────────╢
+║ JSON only      │     23 │ S, Sdext, Ssctr, System, U, Zbp, Zibi, Zicbo,      ║
+║                │        │ Zicfiss, Zvabd, Zvfbdot32f, Zvfofp4min,            ║
+║                │        │ Zvfofp8min, Zvfqbdot8f, Zvfqldot8f, Zvfwbdot16bf,  ║
+║                │        │ Zvfwldot16bf, Zvknha, Zvknhb, Zvqbdot8i, Zvqdotq,  ║
+║                │        │ Zvqldot8i, Zvzip                                   ║
+╟────────────────┼────────┼────────────────────────────────────────────────────╢
+║ Manual only    │     74 │ B, E, G, P, Shcounterenw, Shgatpa, Shmno, Shtvala, ║
+║                │        │ Shvsatpa, Shvstvala, Shvstvecd, Smcdeleg,          ║
+║                │        │ Smcntrpmf, Smctr, Smdbltrp, Smepmp, Smpqr,         ║
+║                │        │ Smstateen, Ssccptr, Sscofpmf, Sscounterenw,        ║
+║                │        │ Ssdbltrp, Ssghi, Ssqosid, Ssstrict, Sstc, Sstvala, ║
+║                │        │ Sstvecd, Sudef, Svade, Svadu, Svbare, Svjkl,       ║
+║                │        │ Svnapot, Svpbmt, Svvptc, X, Xhwacha, Xstu, Z,      ║
+║                │        │ Zaamo, Zabc, Zalrsc, Zca, Zcd, Zce, Zcf, Zclsd,    ║
+║                │        │ Zdinx, Zfinx, Zhinx, Zhinxmin, Ziccamoa, Ziccamoc, ║
+║                │        │ Ziccif, Zicclsm, Ziccrse, Zicntr, Zihintntl,       ║
+║                │        │ Zihintpause, Zihpm, Zilsd, Zkt, Zmmul, Ztso, Zvfh, ║
+║                │        │ Zvfhmin, Zvkb, Zvknc, Zvkng, Zvknh, Zvksc, Zvksg,  ║
+║                │        │ Zvkt                                               ║
+╚════════════════╧════════╧════════════════════════════════════════════════════╝
+
+  53 matched, 23 in JSON only, 74 in manual only
+
+  Note: JSON-only extensions are typically privilege/platform extensions (Sm*, 
+Ss*, Sv*) defined in the privileged spec, not covered by the unprivileged ISA 
+manual scan.
+
+──────────────────── Tier 3 — Extension Relationship Graph ─────────────────────
+
+Extension Relationship Graph
+  76 extensions  ·  48 shared-instruction edges  ·  49 connected component(s)
+
+  Cluster 1 — Cryptographic (13 extensions)
+    Zbb, Zbc, Zbkb, Zbkc, Zbkx, Zk, Zkn, Zknd, Zkne, Zknh, Zks, Zksed, Zksh
+
+  Cluster 2 — Vector Crypto (8 extensions)
+    Zvbb, Zvkn, Zvkned, Zvknha, Zvknhb, Zvks, Zvksed, Zvksh
+
+  Cluster 3 — Base + Extensions (7 extensions)
+    C, D, F, Q, Zfa, Zfh, Zfhmin
+
+  Cluster 4 — Mixed (2 extensions)
+    H, Svinval
+
+  Cluster 5 — Mixed (2 extensions)
+    Zabha, Zacas
+
+  Isolated (44 extensions — no shared instructions with any other extension)
+    A, I, M, S, Sdext, Smrnmi, Ssctr, System, U, V, Zalasr, Zawrs, Zba, Zbp, 
+Zbs, Zcb, Zcmop, Zcmp, Zcmt, Zfbfmin, Zibi, Zicbo, Zicfiss, Zicond, Zicsr, 
+Zifencei, Zimop, Zkr, Zvabd, Zvbc, Zvfbdot32f, Zvfbfmin, Zvfbfwma, Zvfofp4min, 
+Zvfofp8min, Zvfqbdot8f, Zvfqldot8f, Zvfwbdot16bf, Zvfwldot16bf, Zvkg, Zvqbdot8i,
+Zvqdotq, Zvqldot8i, Zvzip
+
+                          Top Shared Instruction Pairs                          
+                                                                                
+  Extension A       Extension B   Shared   Sample                               
+ ────────────────────────────────────────────────────────────────────────────── 
+  Zk            ↔   Zkn               41   AES32DSI, AES32DSMI, AES32ESI, …     
+                                           (+38)                                
+  Zk            ↔   Zks               16   ANDN, CLMUL, CLMULH, … (+13)         
+  Zkn           ↔   Zks               16   ANDN, CLMUL, CLMULH, … (+13)         
+  Zk            ↔   Zknh              14   SHA256SIG0, SHA256SIG1, SHA256SUM0,  
+                                           … (+11)                              
+  Zkn           ↔   Zknh              14   SHA256SIG0, SHA256SIG1, SHA256SUM0,  
+                                           … (+11)                              
+  Zbkb          ↔   Zk                12   ANDN, ORN, PACK, … (+9)              
+  Zbkb          ↔   Zkn               12   ANDN, ORN, PACK, … (+9)              
+  Zbkb          ↔   Zks               12   ANDN, ORN, PACK, … (+9)              
+  Zvkn          ↔   Zvkned            11   VAESDF_VS, VAESDF_VV, VAESDM_VS, …   
+                                           (+8)                                 
+  D             ↔   Zfa               10   FCVTMOD_W_D, FLEQ_D, FLI_D, … (+7)   
+                                                                                
+✓ Graph saved to extension_graph.png

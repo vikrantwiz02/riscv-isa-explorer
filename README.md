@@ -10,7 +10,7 @@ Built for the LFX Mentorship coding challenge: *Mapping the RISC-V Extensions La
 ## Quick Start
 
 ```bash
-# Extract the zip and enter the directory
+git clone https://github.com/vikrantwiz02/riscv-isa-explorer.git
 cd riscv-isa-explorer
 
 # Install dependencies

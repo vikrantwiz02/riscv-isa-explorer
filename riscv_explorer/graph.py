@@ -2,11 +2,11 @@
 Tier 3 — Extension Relationship Graph.
 
 Two extensions are connected when they share at least one instruction.
-With ~60 canonical extensions and ~73 multi-extension instructions, the
+With 76 canonical extensions and 122 multi-extension instructions, the
 resulting graph is dense in the cryptographic cluster and sparse elsewhere.
 
 Terminal output shows connected components (clusters) rather than a raw
-adjacency list — 60 nodes × 100+ edges as text is unreadable noise.
+adjacency list — 76 nodes × 48 edges as text is unreadable noise.
 The PNG export gives the full picture with community colouring.
 """
 
@@ -248,7 +248,8 @@ def export_graph_png(
     pos = nx.spring_layout(G, seed=42, k=2.5)
 
     # Node colours from tab20 palette
-    cmap = cm.get_cmap("tab20", n_communities)
+    # Use matplotlib.colormaps (deprecated cm.get_cmap was removed in 3.11)
+    cmap = matplotlib.colormaps.get_cmap("tab20").resampled(n_communities)
     node_colors = [cmap(community_map.get(n, 0)) for n in G.nodes()]
 
     # Node size proportional to instruction count (with a minimum)

@@ -110,12 +110,11 @@ class TestBuildManualExtensionSet:
 
 class TestCrossReference:
     def _make_summary(self, extensions: list[str]) -> SummaryData:
-        groups = {ext: ["dummy"] for ext in extensions}
+        canonical_groups = {ext: ["dummy"] for ext in extensions}
         return SummaryData(
-            groups=groups,
+            canonical_groups=canonical_groups,
             multi_ext=[],
             total_instructions=len(extensions),
-            total_canonical_extensions=len(extensions),
         )
 
     def test_matched_set(self):

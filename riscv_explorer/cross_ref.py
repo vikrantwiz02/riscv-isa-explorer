@@ -247,7 +247,7 @@ def cross_reference(
     Matching is case-insensitive: "Zba" from JSON matches "zba" from the manual.
     """
     # Canonical names from JSON (lowercase for comparison)
-    json_canonical = set(summary.groups.keys())
+    json_canonical = set(summary.canonical_groups.keys())
     json_lower = {name.lower(): name for name in json_canonical}
 
     # Manual extensions are already lowercase from scan_adoc_file

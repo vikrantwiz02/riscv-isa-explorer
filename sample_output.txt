@@ -1,88 +1,127 @@
 ─────────────────────── Tier 1 — Instruction Set Parsing ───────────────────────
-                Extension Summary                 
-╔══════════════╤══════════════╤══════════════════╗
-║ Extension    │ Instructions │ Example Mnemonic ║
-╟──────────────┼──────────────┼──────────────────╢
-║ A            │           22 │ AMOADD_D         ║
-║ C            │           42 │ C_ADD            ║
-║ D            │           48 │ C_FLD            ║
-║ F            │           41 │ C_FLW            ║
-║ H            │           18 │ HFENCE_GVMA      ║
-║ I            │           52 │ ADD              ║
-║ M            │           13 │ DIV              ║
-║ Q            │           45 │ FADD_Q           ║
-║ S            │            2 │ SFENCE_VMA       ║
-║ Sdext        │            1 │ DRET             ║
-║ Smrnmi       │            1 │ MNRET            ║
-║ Ssctr        │            1 │ SCTRCLR          ║
-║ Svinval      │            5 │ HINVAL_GVMA      ║
-║ System       │            2 │ MRET             ║
-║ U            │            1 │ URET             ║
-║ V            │          627 │ VAADD_VV         ║
-║ Zabha        │           20 │ AMOADD_B         ║
-║ Zacas        │            5 │ AMOCAS_B         ║
-║ Zalasr       │            8 │ LB_AQ            ║
-║ Zawrs        │            2 │ WRS_NTO          ║
-║ Zba          │            8 │ ADD_UW           ║
-║ Zbb          │           26 │ ANDN             ║
-║ Zbc          │            3 │ CLMUL            ║
-║ Zbkb         │           12 │ ANDN             ║
-║ Zbkc         │            2 │ CLMUL            ║
-║ Zbkx         │            2 │ XPERM4           ║
-║ Zbp          │            6 │ GORCI            ║
-║ Zbs          │            8 │ BCLR             ║
-║ Zcb          │           12 │ C_LBU            ║
-║ Zcmop        │            1 │ C_MOP_N          ║
-║ Zcmp         │            6 │ CM_MVA01S        ║
-║ Zcmt         │            1 │ CM_JALT          ║
-║ Zfa          │           33 │ FCVTMOD_W_D      ║
-║ Zfbfmin      │            2 │ FCVT_BF16_S      ║
-║ Zfh          │           33 │ FADD_H           ║
-║ Zfhmin       │           10 │ FCVT_D_H         ║
-║ Zibi         │            2 │ BEQI             ║
-║ Zicbo        │            4 │ CBO_CLEAN        ║
-║ Zicfiss      │            2 │ SSAMOSWAP_D      ║
-║ Zicond       │            2 │ CZERO_EQZ        ║
-║ Zicsr        │            6 │ CSRRC            ║
-║ Zifencei     │            1 │ FENCE_I          ║
-║ Zimop        │            2 │ MOP_R_N          ║
-║ Zk           │           41 │ AES32DSI         ║
-║ Zkn          │           41 │ AES32DSI         ║
-║ Zknd         │            7 │ AES32DSI         ║
-║ Zkne         │            6 │ AES32ESI         ║
-║ Zknh         │           14 │ SHA256SIG0       ║
-║ Zkr          │            2 │ CSRRAND          ║
-║ Zks          │           20 │ ANDN             ║
-║ Zksed        │            2 │ SM4ED            ║
-║ Zksh         │            2 │ SM3P0            ║
-║ Zvabd        │            5 │ VABD_VV          ║
-║ Zvbb         │           16 │ VANDN_VV         ║
-║ Zvbc         │            4 │ VCLMUL_VV        ║
-║ Zvfbdot32f   │            1 │ VFBDOT_VV        ║
-║ Zvfbfmin     │            2 │ VFNCVTBF16_F_F_W ║
-║ Zvfbfwma     │            2 │ VFWMACCBF16_VF   ║
-║ Zvfofp4min   │            1 │ VFEXT_VF2        ║
-║ Zvfofp8min   │            3 │ VFNCVT_F_F_Q     ║
-║ Zvfqbdot8f   │            2 │ VFQBDOT_ALT_VV   ║
-║ Zvfqldot8f   │            2 │ VFQLDOT_ALT_VV   ║
-║ Zvfwbdot16bf │            1 │ VFWBDOT_VV       ║
-║ Zvfwldot16bf │            1 │ VFWLDOT_VV       ║
-║ Zvkg         │            2 │ VGHSH_VV         ║
-║ Zvkn         │           23 │ VAESDF_VS        ║
-║ Zvkned       │           11 │ VAESDF_VS        ║
-║ Zvknha       │            3 │ VSHA2CH_VV       ║
-║ Zvknhb       │            3 │ VSHA2CH_VV       ║
-║ Zvks         │           14 │ VANDN_VV         ║
-║ Zvksed       │            3 │ VSM4K_VI         ║
-║ Zvksh        │            2 │ VSM3C_VI         ║
-║ Zvqbdot8i    │            2 │ VQBDOTS_VV       ║
-║ Zvqdotq      │            7 │ VQDOT_VV         ║
-║ Zvqldot8i    │            2 │ VQLDOTS_VV       ║
-║ Zvzip        │            5 │ VPAIRE_VV        ║
-╟──────────────┼──────────────┼──────────────────╢
-║ TOTAL        │         1188 │                  ║
-╚══════════════╧══════════════╧══════════════════╝
-  76 canonical extensions (from 114 raw tags after normalization)
+                  Extension Summary                  
+╔═════════════════╤══════════════╤══════════════════╗
+║ Extension Tag   │ Instructions │ Example Mnemonic ║
+╟─────────────────┼──────────────┼──────────────────╢
+║ rv32_c          │            1 │ C_JAL            ║
+║ rv32_c_f        │            4 │ C_FLW            ║
+║ rv32_d_zfa      │            2 │ FMVH_X_D         ║
+║ rv32_zk         │           10 │ AES32DSI         ║
+║ rv32_zkn        │           10 │ AES32DSI         ║
+║ rv32_zknd       │            2 │ AES32DSI         ║
+║ rv32_zkne       │            2 │ AES32ESI         ║
+║ rv32_zknh       │            6 │ SHA512SIG0H      ║
+║ rv64_a          │           11 │ AMOADD_D         ║
+║ rv64_c          │           10 │ C_ADDIW          ║
+║ rv64_d          │            6 │ FCVT_D_L         ║
+║ rv64_f          │            4 │ FCVT_L_S         ║
+║ rv64_h          │            3 │ HLV_D            ║
+║ rv64_i          │           15 │ ADDIW            ║
+║ rv64_m          │            5 │ DIVUW            ║
+║ rv64_q          │            4 │ FCVT_L_Q         ║
+║ rv64_q_zfa      │            2 │ FMVH_X_Q         ║
+║ rv64_zacas      │            1 │ AMOCAS_Q         ║
+║ rv64_zba        │            5 │ ADD_UW           ║
+║ rv64_zbb        │            9 │ CLZW             ║
+║ rv64_zbkb       │            5 │ PACKW            ║
+║ rv64_zbp        │            5 │ GORCI            ║
+║ rv64_zbs        │            4 │ BCLRI            ║
+║ rv64_zcb        │            1 │ C_ZEXT_W         ║
+║ rv64_zfh        │            4 │ FCVT_H_L         ║
+║ rv64_zk         │           16 │ AES64DS          ║
+║ rv64_zkn        │           16 │ AES64DS          ║
+║ rv64_zknd       │            5 │ AES64DS          ║
+║ rv64_zkne       │            4 │ AES64ES          ║
+║ rv64_zknh       │            4 │ SHA512SIG0       ║
+║ rv64_zkr        │            1 │ CSRRAND64        ║
+║ rv64_zks        │            5 │ PACKW            ║
+║ rv_a            │           11 │ AMOADD_W         ║
+║ rv_c            │           23 │ C_ADD            ║
+║ rv_c_d          │            4 │ C_FLD            ║
+║ rv_d            │           26 │ FADD_D           ║
+║ rv_d_zfa        │            8 │ FCVTMOD_W_D      ║
+║ rv_d_zfhmin     │            2 │ FCVT_D_H         ║
+║ rv_f            │           26 │ FADD_S           ║
+║ rv_f_zfa        │            7 │ FLEQ_S           ║
+║ rv_h            │           13 │ HFENCE_GVMA      ║
+║ rv_i            │           37 │ ADD              ║
+║ rv_m            │            8 │ DIV              ║
+║ rv_q            │           30 │ FADD_Q           ║
+║ rv_q_zfa        │            7 │ FLEQ_Q           ║
+║ rv_q_zfhmin     │            2 │ FCVT_H_Q         ║
+║ rv_s            │            2 │ SFENCE_VMA       ║
+║ rv_sdext        │            1 │ DRET             ║
+║ rv_smrnmi       │            1 │ MNRET            ║
+║ rv_ssctr        │            1 │ SCTRCLR          ║
+║ rv_svinval      │            3 │ SFENCE_INVAL_IR  ║
+║ rv_svinval_h    │            2 │ HINVAL_GVMA      ║
+║ rv_system       │            2 │ MRET             ║
+║ rv_u            │            1 │ URET             ║
+║ rv_v            │          627 │ VAADD_VV         ║
+║ rv_zabha        │           18 │ AMOADD_B         ║
+║ rv_zabha_zacas  │            2 │ AMOCAS_B         ║
+║ rv_zacas        │            2 │ AMOCAS_D         ║
+║ rv_zalasr       │            8 │ LB_AQ            ║
+║ rv_zawrs        │            2 │ WRS_NTO          ║
+║ rv_zba          │            3 │ SH1ADD           ║
+║ rv_zbb          │           17 │ ANDN             ║
+║ rv_zbc          │            3 │ CLMUL            ║
+║ rv_zbkb         │            7 │ ANDN             ║
+║ rv_zbkc         │            2 │ CLMUL            ║
+║ rv_zbkx         │            2 │ XPERM4           ║
+║ rv_zbp          │            1 │ XPERM16          ║
+║ rv_zbs          │            4 │ BCLR             ║
+║ rv_zcb          │           11 │ C_LBU            ║
+║ rv_zcmop        │            1 │ C_MOP_N          ║
+║ rv_zcmp         │            6 │ CM_MVA01S        ║
+║ rv_zcmt         │            1 │ CM_JALT          ║
+║ rv_zfbfmin      │            2 │ FCVT_BF16_S      ║
+║ rv_zfh          │           22 │ FADD_H           ║
+║ rv_zfh_zfa      │            7 │ FLEQ_H           ║
+║ rv_zfhmin       │            6 │ FCVT_H_S         ║
+║ rv_zibi         │            2 │ BEQI             ║
+║ rv_zicbo        │            4 │ CBO_CLEAN        ║
+║ rv_zicfiss      │            2 │ SSAMOSWAP_D      ║
+║ rv_zicond       │            2 │ CZERO_EQZ        ║
+║ rv_zicsr        │            6 │ CSRRC            ║
+║ rv_zifencei     │            1 │ FENCE_I          ║
+║ rv_zimop        │            2 │ MOP_R_N          ║
+║ rv_zk           │           15 │ ANDN             ║
+║ rv_zkn          │           15 │ ANDN             ║
+║ rv_zknh         │            4 │ SHA256SIG0       ║
+║ rv_zkr          │            1 │ CSRRAND          ║
+║ rv_zks          │           15 │ ANDN             ║
+║ rv_zksed        │            2 │ SM4ED            ║
+║ rv_zksh         │            2 │ SM3P0            ║
+║ rv_zvabd        │            5 │ VABD_VV          ║
+║ rv_zvbb         │           16 │ VANDN_VV         ║
+║ rv_zvbc         │            4 │ VCLMUL_VV        ║
+║ rv_zvfbdot32f   │            1 │ VFBDOT_VV        ║
+║ rv_zvfbfmin     │            2 │ VFNCVTBF16_F_F_W ║
+║ rv_zvfbfwma     │            2 │ VFWMACCBF16_VF   ║
+║ rv_zvfofp4min   │            1 │ VFEXT_VF2        ║
+║ rv_zvfofp8min   │            3 │ VFNCVT_F_F_Q     ║
+║ rv_zvfqbdot8f   │            2 │ VFQBDOT_ALT_VV   ║
+║ rv_zvfqldot8f   │            2 │ VFQLDOT_ALT_VV   ║
+║ rv_zvfwbdot16bf │            1 │ VFWBDOT_VV       ║
+║ rv_zvfwldot16bf │            1 │ VFWLDOT_VV       ║
+║ rv_zvkg         │            2 │ VGHSH_VV         ║
+║ rv_zvkn         │           23 │ VAESDF_VS        ║
+║ rv_zvkned       │           11 │ VAESDF_VS        ║
+║ rv_zvknha       │            3 │ VSHA2CH_VV       ║
+║ rv_zvknhb       │            3 │ VSHA2CH_VV       ║
+║ rv_zvks         │           14 │ VANDN_VV         ║
+║ rv_zvksed       │            3 │ VSM4K_VI         ║
+║ rv_zvksh        │            2 │ VSM3C_VI         ║
+║ rv_zvqbdot8i    │            2 │ VQBDOTS_VV       ║
+║ rv_zvqdotq      │            7 │ VQDOT_VV         ║
+║ rv_zvqldot8i    │            2 │ VQLDOTS_VV       ║
+║ rv_zvzip        │            5 │ VPAIRE_VV        ║
+╟─────────────────┼──────────────┼──────────────────╢
+║ TOTAL           │         1188 │                  ║
+╚═════════════════╧══════════════╧══════════════════╝
+  114 raw extension tags  →  76 canonical extensions (after merging arch 
+variants: rv_zba + rv64_zba → Zba)
 
 Instructions in Multiple Extensions (122 
                  total)                  

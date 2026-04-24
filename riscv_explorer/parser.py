@@ -1,8 +1,8 @@
 """
 Tier 1 — Instruction Set Parsing.
 
-Fetches instr_dict.json, groups instructions by canonical extension name,
-and identifies instructions that belong to more than one extension.
+Fetches instr_dict.json, groups instructions by extension tag, and identifies
+instructions that belong to more than one extension.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from rich.console import Console
 from rich.table import Table
 from rich import box
 
-from .normalize import normalize_tag, normalize_tags
+from .normalize import normalize_tags
 
 INSTR_DICT_URL = (
     "https://raw.githubusercontent.com/rpsene/riscv-extensions-landscape"
@@ -44,12 +44,12 @@ class MultiExtInstr:
 
 @dataclass
 class SummaryData:
-    # canonical extension name -> sorted list of mnemonics
-    groups: dict[str, list[str]] = field(default_factory=dict)
+    # raw extension tag -> sorted list of mnemonics  (matches the JSON structure)
+    raw_tag_groups: dict[str, list[str]] = field(default_factory=dict)
+    # canonical extension name -> sorted list of mnemonics  (arch variants merged)
+    canonical_groups: dict[str, list[str]] = field(default_factory=dict)
     multi_ext: list[MultiExtInstr] = field(default_factory=list)
     total_instructions: int = 0
-    total_canonical_extensions: int = 0
-    total_raw_tags: int = 0
 
 
 def fetch_instr_dict(
@@ -74,10 +74,25 @@ def fetch_instr_dict(
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         cache_path.write_text(json.dumps(data, indent=2))
 
-    console.print(
-        f"[green]✓[/green] Fetched {len(data)} instructions"
-    )
+    console.print(f"[green]✓[/green] Fetched {len(data)} instructions")
     return data
+
+
+def group_by_raw_tag(
+    instr_dict: dict[str, InstrEntry],
+) -> dict[str, list[str]]:
+    """
+    Build a mapping from raw extension tag to sorted list of mnemonics.
+
+    This preserves the original tag names from the JSON (rv_zba, rv64_zba, etc.)
+    exactly as the source data records them.  An instruction with multiple tags
+    (e.g., andn with rv_zbb, rv_zk, rv_zbkb, ...) appears in each tag's group.
+    """
+    groups: dict[str, list[str]] = {}
+    for mnemonic, entry in instr_dict.items():
+        for tag in entry.get("extension", []):
+            groups.setdefault(tag, []).append(mnemonic)
+    return dict(sorted({k: sorted(v) for k, v in groups.items()}.items()))
 
 
 def group_by_canonical_extension(
@@ -86,17 +101,14 @@ def group_by_canonical_extension(
     """
     Build a mapping from canonical extension name to sorted list of mnemonics.
 
-    An instruction tagged with a compound extension (e.g., rv_c_f -> C + F)
-    appears in both groups.  Arch variants that collapse to the same canonical
-    name (rv_zba / rv64_zba -> Zba) are counted once.
+    Arch variants that collapse to the same canonical name (rv_zba / rv64_zba
+    -> Zba) are counted once.  A compound tag (rv_c_f -> C + F) contributes
+    its instruction to both groups.
     """
     groups: dict[str, list[str]] = {}
     for mnemonic, entry in instr_dict.items():
-        canonical = normalize_tags(entry.get("extension", []))
-        for ext in canonical:
+        for ext in normalize_tags(entry.get("extension", [])):
             groups.setdefault(ext, []).append(mnemonic)
-
-    # Sort mnemonics within each group, then sort the dict by extension name.
     return dict(sorted({k: sorted(v) for k, v in groups.items()}.items()))
 
 
@@ -106,48 +118,48 @@ def find_multi_extension_instructions(
     """
     Return all instructions whose canonical extension set has more than one member.
 
-    Note the distinction from "multiple raw tags": an instruction with tags
-    [rv_zba, rv64_zba] has canonical set {Zba} (size 1) and is excluded.
-    Only instructions that genuinely span multiple distinct extensions qualify.
+    An instruction with tags [rv_zba, rv64_zba] has canonical set {Zba} (size 1)
+    and is excluded — those are arch variants of the same extension, not two
+    distinct extensions.  Only instructions that genuinely span multiple distinct
+    extensions (e.g., andn in Zbb, Zbkb, Zk, Zkn, Zks) qualify.
     """
     result = []
     for mnemonic, entry in instr_dict.items():
         raw_tags = entry.get("extension", [])
         canonical = normalize_tags(raw_tags)
         if len(canonical) > 1:
-            result.append(
-                MultiExtInstr(
-                    mnemonic=mnemonic,
-                    raw_tags=raw_tags,
-                    canonical_extensions=canonical,
-                )
-            )
+            result.append(MultiExtInstr(
+                mnemonic=mnemonic,
+                raw_tags=raw_tags,
+                canonical_extensions=canonical,
+            ))
     return sorted(result, key=lambda x: x.mnemonic)
 
 
 def build_summary(instr_dict: dict[str, InstrEntry]) -> SummaryData:
-    groups = group_by_canonical_extension(instr_dict)
-    multi_ext = find_multi_extension_instructions(instr_dict)
-    raw_tags: set[str] = set()
-    for entry in instr_dict.values():
-        raw_tags.update(entry.get("extension", []))
     return SummaryData(
-        groups=groups,
-        multi_ext=multi_ext,
+        raw_tag_groups=group_by_raw_tag(instr_dict),
+        canonical_groups=group_by_canonical_extension(instr_dict),
+        multi_ext=find_multi_extension_instructions(instr_dict),
         total_instructions=len(instr_dict),
-        total_canonical_extensions=len(groups),
-        total_raw_tags=len(raw_tags),
     )
 
 
 def print_summary_table(summary: SummaryData) -> None:
+    """
+    Print the extension summary table using raw tags (matching the spec format),
+    followed by a note showing the canonical count after arch-variant merging.
+    """
+    raw = summary.raw_tag_groups
+    canonical = summary.canonical_groups
+
     table = Table(
         title="Extension Summary",
         box=box.DOUBLE_EDGE,
         show_footer=True,
         header_style="bold cyan",
     )
-    table.add_column("Extension", style="bold", footer="TOTAL")
+    table.add_column("Extension Tag", style="bold", footer="TOTAL")
     table.add_column(
         "Instructions",
         justify="right",
@@ -155,13 +167,14 @@ def print_summary_table(summary: SummaryData) -> None:
     )
     table.add_column("Example Mnemonic", style="dim")
 
-    for ext, mnemonics in summary.groups.items():
-        table.add_row(ext, str(len(mnemonics)), mnemonics[0].upper())
+    for tag, mnemonics in raw.items():
+        table.add_row(tag, str(len(mnemonics)), mnemonics[0].upper())
 
     console.print(table)
     console.print(
-        f"  [dim]{summary.total_canonical_extensions} canonical extensions "
-        f"(from {summary.total_raw_tags} raw tags after normalization)[/dim]\n"
+        f"  [dim]{len(raw)} raw extension tags  →  "
+        f"{len(canonical)} canonical extensions "
+        f"(after merging arch variants: rv_zba + rv64_zba → Zba)[/dim]\n"
     )
 
 

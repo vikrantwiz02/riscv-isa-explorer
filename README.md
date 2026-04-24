@@ -69,19 +69,20 @@ Clones the [riscv-isa-manual](https://github.com/riscv/riscv-isa-manual) reposit
 ### Tier 1
 
 ```
-╔══════════════╤══════════════╤══════════════════╗
-║ Extension    │ Instructions │ Example Mnemonic ║
-╟──────────────┼──────────────┼──────────────────╢
-║ A            │           22 │ AMOADD_D         ║
-║ C            │           42 │ C_ADD            ║
-║ D            │           48 │ C_FLD            ║
-║ F            │           41 │ C_FLW            ║
-║ ...          │          ... │ ...              ║
-║ Zvzip        │            5 │ VPAIRE_VV        ║
-╟──────────────┼──────────────┼──────────────────╢
-║ TOTAL        │         1188 │                  ║
-╚══════════════╧══════════════╧══════════════════╝
-  76 canonical extensions (from 114 raw tags after normalization)
+╔═════════════════╤══════════════╤══════════════════╗
+║ Extension Tag   │ Instructions │ Example Mnemonic ║
+╟─────────────────┼──────────────┼──────────────────╢
+║ rv32_zk         │           10 │ AES32DSI         ║
+║ rv64_zba        │            5 │ ADD_UW           ║
+║ rv_i            │           37 │ ADD              ║
+║ rv_zba          │            3 │ SH1ADD           ║
+║ rv_zbb          │           17 │ ANDN             ║
+║ ...             │          ... │ ...              ║
+╟─────────────────┼──────────────┼──────────────────╢
+║ TOTAL           │         1188 │                  ║
+╚═════════════════╧══════════════╧══════════════════╝
+  114 raw extension tags  →  76 canonical extensions
+  (after merging arch variants: rv_zba + rv64_zba → Zba)
 
 Instructions in Multiple Extensions (122 total)
   Mnemonic    Canonical Extensions
@@ -137,7 +138,7 @@ Extension Relationship Graph
 ## Running Tests
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
 pytest tests/ -v
 ```
 
@@ -166,16 +167,14 @@ The rule: if the body starts with a known two-letter platform prefix (`sm`, `ss`
 (it starts with `sv`), but it actually means the Svinval extension plus the Hypervisor (`H`)
 extension.  This gets an explicit override entry rather than a fragile heuristic.
 
-### Why the example output differs from the spec
+### Raw tags in Tier 1, canonical names in Tier 2
 
-The spec shows `rv_zba | 4 instructions | e.g. SH1ADD`.  This tool shows `Zba | 8 | ADD_UW`.
-Two differences:
+Tier 1 uses the raw tag names from the JSON (`rv_zba`, `rv64_zba`) exactly as the spec requests.
+Tier 2 cross-references against the ISA manual using canonical names (`Zba`), because the manual
+never says `rv_zba` — it always uses the clean name.
 
-- **Name**: The canonical form `Zba` is used instead of the raw tag `rv_zba`.  This is a design
-  choice — canonical names match what the ISA manual uses and let Tier 2 cross-reference work
-  without an extra lookup table.
-- **Count**: 8 instead of 4.  `rv_zba` has 4 instructions; `rv64_zba` has another 4.  After
-  normalization they collapse to one `Zba` group with 8 instructions total.
+The footer after the Tier 1 table shows the consolidation: `114 raw extension tags → 76 canonical
+extensions`, so it's clear what normalization does without hiding the raw data.
 
 ### Why five adoc regex patterns instead of one
 

@@ -117,13 +117,23 @@ class TestBuildSummary:
 
     def test_total_canonical_extensions(self, sample_dict):
         summary = build_summary(sample_dict)
-        # With our fixture: I, Zba, Zknd, Zk, Zkn, Zbb, Zks, Zbkb, C, D, F,
-        # Zfa, Svinval, H, Smrnmi, M  — count varies but should be > 10
-        assert summary.total_canonical_extensions > 10
+        # canonical_groups merges arch variants — must be <= raw tag count
+        assert len(summary.canonical_groups) > 10
 
-    def test_groups_present(self, sample_dict):
+    def test_raw_tag_count_gte_canonical(self, sample_dict):
         summary = build_summary(sample_dict)
-        assert len(summary.groups) > 0
+        # raw tags include arch variants (rv_zba, rv64_zba) so always >= canonical
+        assert len(summary.raw_tag_groups) >= len(summary.canonical_groups)
+
+    def test_raw_tags_present(self, sample_dict):
+        summary = build_summary(sample_dict)
+        assert "rv_i" in summary.raw_tag_groups
+        assert "rv64_zba" in summary.raw_tag_groups
+
+    def test_canonical_groups_present(self, sample_dict):
+        summary = build_summary(sample_dict)
+        assert "I" in summary.canonical_groups
+        assert "Zba" in summary.canonical_groups
 
     def test_multi_ext_present(self, sample_dict):
         summary = build_summary(sample_dict)
